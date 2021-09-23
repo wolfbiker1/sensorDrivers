@@ -1,0 +1,17 @@
+[package]
+name = "suite"
+version = "0.1.0"
+authors = ["wolfbiker1 <be631wil@htwg-konstanz.de>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bmp280_module = { path = "../bmp280" }
+am2302 = { path = "../am2302" }
+bh1750 = { path = "../bh1750" }
+serde = { version = "1.0.127", features = ["derive"] }
+serde_json = "1.0.66"
+# isahc = "1.4.0"
+# [dependencies.curl]
+# git = "https://github.com/carllerche/curl-rust"

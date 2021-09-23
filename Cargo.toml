@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "suite",
+    "bmp280",
+    "am2302"
+]
