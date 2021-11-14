@@ -7,9 +7,9 @@ pub mod humidity {
     use std::sync::atomic::Ordering;
     use std::sync::RwLock;
     use std::{thread, time};
-    use bitvec::prelude::*;
 
     const INTERVAL: u64 = 5;
+    const VEC_LENGTH: u32 = 42;
     pub static HUMIDITY: AtomicF64 = AtomicF64::new(0.0);
     pub static OUTDOOR_TEMP: AtomicF64 = AtomicF64::new(0.0);
 
@@ -66,33 +66,37 @@ pub mod humidity {
         thread::sleep(time::Duration::from_millis(2));
     }
 
-    fn convert_durations_to_bit(e: &[time::Duration]) -> BitVec<bitvec::order::Msb0, u8> {
-        let mut bit_vec: BitVec<bitvec::order::Msb0, u8> = bitvec![Msb0, u8;];
-        for (n, elapsed) in e.iter().enumerate() {
-            if n == 0 || n == 1 {
-                continue
-            }
+    fn convert_durations_to_bit(e: &[time::Duration]) -> u64 {
+        let mut measure_result: u64 = 0x00_0000_0000;
+        if e.len() != VEC_LENGTH as usize {
+            return 0x0
+        }
+
+
+        for i in 2..41 {
+            let to_shift = VEC_LENGTH - i;
+            let elapsed = e[i as usize];
+
+            // result: 0
             if elapsed.as_micros() >= 19 && elapsed.as_micros() <= 30 {
-                bit_vec.push(false);
+                // bit_vec.push(false);
             } else if elapsed.as_micros() >= 68 && elapsed.as_micros() <= 82 {
-                bit_vec.push(true);
+                // result: 1
+                measure_result |= 1 << to_shift;
             }
-        }    
-        bit_vec  
+        }
+        measure_result
     }
 
     fn crc_check_n_send(e: &[time::Duration]) -> bool {
-        let bit_vec: BitVec<bitvec::order::Msb0, u8> = convert_durations_to_bit(e);
+        let bit_result: u64 = convert_durations_to_bit(e);
 
-        if bit_vec.len() != 40 {
-            return false
-        }
 
-        let rh_high = bit_vec.as_raw_slice()[0] as usize;
-        let rh_low = bit_vec.as_raw_slice()[1] as usize;
-        let t_high = bit_vec.as_raw_slice()[2] as usize;
-        let t_low = bit_vec.as_raw_slice()[3] as usize;
-        let checksum =  bit_vec.as_raw_slice()[4] as usize;
+        let rh_high = 32 >> (bit_result & !(0x00FFFF_FFFF) as u64);
+        let rh_low = 24 >> (bit_result & !(0xFF00FF_FFFF) as u64);
+        let t_high = 16 >> (bit_result & !(0xFFFF00_FFFF) as u64);
+        let t_low = 8 >> (bit_result & !(0xFFFFFF_00FF) as u64);
+        let checksum =  bit_result & !(0xFFFFFF_FF00) as u64;
 
         if (rh_high + rh_low + t_high + t_low) as u8 == checksum as u8 {
             set_timestamp();
