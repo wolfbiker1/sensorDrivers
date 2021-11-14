@@ -66,10 +66,10 @@ pub mod humidity {
         thread::sleep(time::Duration::from_millis(2));
     }
 
-    fn convert_durations_to_bit(e: &[time::Duration]) -> u64 {
+    fn convert_durations_to_bit(e: &[time::Duration]) -> Option<u64> {
         let mut measure_result: u64 = 0x00_0000_0000;
         if e.len() != VEC_LENGTH as usize {
-            return 0x0
+            return None
         }
 
 
@@ -82,29 +82,33 @@ pub mod humidity {
                 // bit_vec.push(false);
             } else if elapsed.as_micros() >= 68 && elapsed.as_micros() <= 82 {
                 // result: 1
-                measure_result |= 1 << to_shift;
+                measure_result |= 0b1 << to_shift;
             }
         }
-        measure_result
+        Some(measure_result)
     }
 
     fn crc_check_n_send(e: &[time::Duration]) -> bool {
-        let bit_result: u64 = convert_durations_to_bit(e);
-
-
-        let rh_high = 32 >> (bit_result & !(0x00FFFF_FFFF) as u64);
-        let rh_low = 24 >> (bit_result & !(0xFF00FF_FFFF) as u64);
-        let t_high = 16 >> (bit_result & !(0xFFFF00_FFFF) as u64);
-        let t_low = 8 >> (bit_result & !(0xFFFFFF_00FF) as u64);
-        let checksum =  bit_result & !(0xFFFFFF_FF00) as u64;
-
-        if (rh_high + rh_low + t_high + t_low) as u8 == checksum as u8 {
-            set_timestamp();
-            set_humidity(u16::from_be_bytes([rh_high as u8, rh_low as u8]) as f64 / 10.0);
-            set_outdoor_temp(u16::from_be_bytes([t_high as u8, t_low as u8]) as f64 / 10.0);
-            return true
+        let bit_result: Option<u64> = convert_durations_to_bit(e);
+        match bit_result {
+            Some(res) => {
+                let rh_high = 32 >> (res & !(0x00FFFF_FFFF) as u64);
+                let rh_low = 24 >> (res & !(0xFF00FF_FFFF) as u64);
+                let t_high = 16 >> (res & !(0xFFFF00_FFFF) as u64);
+                let t_low = 8 >> (res & !(0xFFFFFF_00FF) as u64);
+                let checksum =  res & !(0xFFFFFF_FF00) as u64;
+        
+                if (rh_high + rh_low + t_high + t_low) as u8 == checksum as u8 {
+                    set_timestamp();
+                    set_humidity(u16::from_be_bytes([rh_high as u8, rh_low as u8]) as f64 / 10.0);
+                    set_outdoor_temp(u16::from_be_bytes([t_high as u8, t_low as u8]) as f64 / 10.0);
+                    true
+                } else {
+                    false
+                }
+            }
+            None => false
         }
-        false
     }
 
     fn start_reading(line: &Line) -> Vec<time::Duration> {
