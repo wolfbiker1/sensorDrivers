@@ -2,12 +2,12 @@
 extern crate lazy_static;
 pub mod humidity {
     use atomic_float::AtomicF64;
+    use bitvec::prelude::*;
     use chrono::prelude::*;
     use gpio_cdev::{Chip, Line, LineRequestFlags};
     use std::sync::atomic::Ordering;
     use std::sync::RwLock;
     use std::{thread, time};
-    use bitvec::prelude::*;
 
     const INTERVAL: u64 = 5;
     pub static HUMIDITY: AtomicF64 = AtomicF64::new(0.0);
@@ -70,35 +70,35 @@ pub mod humidity {
         let mut bit_vec: BitVec<bitvec::order::Msb0, u8> = bitvec![Msb0, u8;];
         for (n, elapsed) in e.iter().enumerate() {
             if n == 0 || n == 1 {
-                continue
+                continue;
             }
             if elapsed.as_micros() >= 19 && elapsed.as_micros() <= 30 {
                 bit_vec.push(false);
             } else if elapsed.as_micros() >= 68 && elapsed.as_micros() <= 82 {
                 bit_vec.push(true);
             }
-        }    
-        bit_vec  
+        }
+        bit_vec
     }
 
     fn crc_check_n_send(e: &[time::Duration]) -> bool {
         let bit_vec: BitVec<bitvec::order::Msb0, u8> = convert_durations_to_bit(e);
 
         if bit_vec.len() != 40 {
-            return false
+            return false;
         }
 
         let rh_high = bit_vec.as_raw_slice()[0] as usize;
         let rh_low = bit_vec.as_raw_slice()[1] as usize;
         let t_high = bit_vec.as_raw_slice()[2] as usize;
         let t_low = bit_vec.as_raw_slice()[3] as usize;
-        let checksum =  bit_vec.as_raw_slice()[4] as usize;
+        let checksum = bit_vec.as_raw_slice()[4] as usize;
 
         if (rh_high + rh_low + t_high + t_low) as u8 == checksum as u8 {
             set_timestamp();
             set_humidity(u16::from_be_bytes([rh_high as u8, rh_low as u8]) as f64 / 10.0);
             set_outdoor_temp(u16::from_be_bytes([t_high as u8, t_low as u8]) as f64 / 10.0);
-            return true
+            return true;
         }
         false
     }
