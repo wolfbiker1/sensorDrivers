@@ -2,7 +2,9 @@
 Currently supporting:
 
 AM2302
+
 BH1750
+
 BMP280
 
 # What it does
@@ -22,6 +24,6 @@ This application does not run stand alone and depends from this repositories:
 
 [APIServer][APIServer]
 
-[WeatherGui]: (https://github.com/wolfbiker1/weatherGui)
-[APIServer]: (https://github.com/wolfbiker1/weatherStationAPIServer)
-[NextLevelRTOS]: (https://github.com/wolfbiker1/NextLevelRTOS)
+[WeatherGui]: https://github.com/wolfbiker1/weatherGui (WeatherGui)
+[APIServer]: https://github.com/wolfbiker1/weatherStationAPIServer (APIServer)
+[NextLevelRTOS]: https://github.com/wolfbiker1/NextLevelRTOS (NextLevelRTOS)
