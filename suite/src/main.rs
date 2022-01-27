@@ -43,12 +43,12 @@ fn send_to_backend(socket: &mut UdpSocket) {
     socket
         .send_to(measurements.as_bytes(), SOCKET_ADDR)
         .expect("couldn't send data");
-    socket
-        .send_to(&timestamps.len().to_ne_bytes(), SOCKET_ADDR)
-        .expect("couldn't send data");
-    socket
-        .send_to(timestamps.as_bytes(), SOCKET_ADDR)
-        .expect("couldn't send data");
+    // socket
+    //     .send_to(&timestamps.len().to_ne_bytes(), SOCKET_ADDR)
+    //     .expect("couldn't send data");
+    // socket
+    //     .send_to(timestamps.as_bytes(), SOCKET_ADDR)
+    //     .expect("couldn't send data");
 }
 
 fn main() {
