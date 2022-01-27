@@ -8,8 +8,7 @@ const SOCKET_ADDR: &str = "192.168.178.66:7879";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Measurements {
-    indoor_temp: String,
-    outdoor_temp: String,
+    temperature: String,
     humidity: String,
     pressure: String,
     brightness: String,
@@ -25,8 +24,7 @@ struct Timestamps {
 
 fn send_to_backend(socket: &mut UdpSocket) {
     let measurements = Measurements {
-        indoor_temp: format!("{:.2}", pressure_temp::get_temp()),
-        outdoor_temp: format!("{:.2}", humidity::get_outdoor_temp()),
+        temperature: format!("{:.2}", humidity::get_outdoor_temp()),
         humidity: format!("{:.2}", humidity::get_humidity()),
         pressure: format!("{:.2}", pressure_temp::get_pressure()),
         brightness: format!("{:.2}", brightness::get_brightness()),
@@ -45,12 +43,12 @@ fn send_to_backend(socket: &mut UdpSocket) {
     socket
         .send_to(measurements.as_bytes(), SOCKET_ADDR)
         .expect("couldn't send data");
-    socket
-        .send_to(&timestamps.len().to_ne_bytes(), SOCKET_ADDR)
-        .expect("couldn't send data");
-    socket
-        .send_to(timestamps.as_bytes(), SOCKET_ADDR)
-        .expect("couldn't send data");
+    // socket
+    //     .send_to(&timestamps.len().to_ne_bytes(), SOCKET_ADDR)
+    //     .expect("couldn't send data");
+    // socket
+    //     .send_to(timestamps.as_bytes(), SOCKET_ADDR)
+    //     .expect("couldn't send data");
 }
 
 fn main() {
